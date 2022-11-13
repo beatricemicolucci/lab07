@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import javax.sound.sampled.FloatControl;
+
 /**
  * A special utility class with methods that transform collections using {@link Function}s provided as parameters.
  */
@@ -54,7 +56,14 @@ public final class Transformers {
      * @param <O> output elements type
      */
     public static <I, O> List<O> transform(final Iterable<I> base, final Function<I, O> transformer) {
-        return null;
+        return flattenTransform(base, new Function<I,List<? extends O>>() {
+
+            @Override
+            public List<? extends O> call(I input) {
+                return List.of(transformer.call(input));
+            }
+            
+        });
     }
 
     /**
@@ -70,7 +79,7 @@ public final class Transformers {
      * @param <I> type of the collection elements
      */
     public static <I> List<? extends I> flatten(final Iterable<? extends Collection<? extends I>> base) {
-        return null;
+        return flattenTransform(base, Function.identity());
     }
 
     /**
@@ -87,7 +96,11 @@ public final class Transformers {
      * @param <I> elements type
      */
     public static <I> List<I> select(final Iterable<I> base, final Function<I, Boolean> test) {
-        return null;
+        return flattenTransform(base, new Function<I,Collection<? extends I>>() {
+            public Collection<? extends I> call(final I input) {
+                return test.call(input) ? List.of(input) : List.of();
+            }
+        });
     }
 
     /**
@@ -103,6 +116,11 @@ public final class Transformers {
      * @param <I> elements type
      */
     public static <I> List<I> reject(final Iterable<I> base, final Function<I, Boolean> test) {
-        return null;
+        return select(base, new Function<I,Boolean>() {
+            @Override
+            public Boolean call(final I input) {
+                return !test.call(input);
+            }
+        });
     }
 }
